@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
-import { MessageSquare, X, Send, Sparkles, User, Plus, RefreshCw, Trash2, Calendar, ClipboardList, BotMessageSquare } from 'lucide-react';
+import { X, Send, Sparkles, User, Plus, RefreshCw, Trash2, Calendar, ClipboardList, BotMessageSquare } from 'lucide-react';
 import { useData } from '../context/DataContext';
 
 interface ChatMessage {
@@ -62,30 +62,54 @@ const AIChatbot = () => {
       const usersContext = users.map(u => `- ID: ${u.user_id}, Name: "${u.name}"`).join('\n');
       const tasksContext = tasks.map(t => `- ID: ${t.task_id}, Title: "${t.title}", Status: ${t.status}, Priority: ${t.priority}, Assigned To: ${t.assigned_to}, Subtasks: ${t.subtasks ? t.subtasks.map(s => s.title + (s.completed ? ' (Done)' : ' (Pending)')).join(', ') : 'None'}`).join('\n');
 
+      const statusSummary = {
+        TODO: tasks.filter(t => t.status === 'TODO').length,
+        DOING: tasks.filter(t => t.status === 'DOING').length,
+        DONE: tasks.filter(t => t.status === 'DONE').length,
+        BLOCKED: tasks.filter(t => t.status === 'BLOCKED').length,
+        Total: tasks.length
+      };
+
+      const today = new Date().toLocaleString('th-TH', { timeZone: 'Asia/Bangkok' });
+
       const systemInstruction = `
 You are TaskSync AI, an expert productivity and task assistant.
 You help the user manage their tasks, priorities, daily scheduling, and breaking down tasks.
 You MUST respond with a valid JSON object matching the requested schema.
-Always reply in Thai. Use polite male language (ครับ/ผม). You are a male assistant.
+
+CRITICAL RULES:
+1. NEVER hallucinate or invent tasks, projects, or users. ONLY use the exact data provided in the Context below.
+2. If the user asks about something not in the context, politely inform them that you cannot find that information in the current workspace.
+3. Always reply in Thai. Use polite, professional male language (ครับ/ผม).
+4. Do not perform actions (ADD/UPDATE/DELETE) unless the user explicitly requests it.
+5. Current Date and Time: ${today}
+6. IMPORTANT: When summarizing the number of tasks, USE THE EXACT NUMBERS provided in the summary section below. Do not attempt to count them yourself.
 
 Context of projects currently in system:
-${projectsContext}
+${projectsContext || 'No projects.'}
 
 Context of users currently in system:
-${usersContext}
+${usersContext || 'No users.'}
 
 Context of tasks currently in system:
-${tasksContext}
+--- TASK SUMMARY ---
+Total Tasks: ${statusSummary.Total}
+- TODO: ${statusSummary.TODO}
+- DOING: ${statusSummary.DOING}
+- DONE: ${statusSummary.DONE}
+- BLOCKED: ${statusSummary.BLOCKED}
+--------------------
+${tasksContext || 'No tasks.'}
 
 Actions you can request in the "actions" array if the user explicitly asks to perform them:
 1. ADD_TASK: Creates a task.
    - Match project names to project IDs. Match assignee names to user IDs. If not found, use default.
    - Payload keys: { "title": "...", "project_id": "...", "priority": "LOW"|"MEDIUM"|"HIGH"|"CRITICAL", "assigned_to": "..." }
 2. UPDATE_TASK: Updates status, priority, or other details.
-   - Locate the task_id from the context tasks list.
+   - Locate the exact task_id from the context tasks list.
    - Payload keys: { "task_id": "...", "status": "TODO"|"DOING"|"DONE"|"BLOCKED", "priority": "LOW"|"MEDIUM"|"HIGH"|"CRITICAL", "title": "..." }
 3. DELETE_TASK: Deletes a task.
-   - Locate the task_id.
+   - Locate the exact task_id.
    - Payload keys: { "task_id": "..." }
 4. ADD_SUBTASKS: Breaks down a task.
    - Locate the parent task_id.
@@ -151,6 +175,7 @@ If the user asks to schedule or prioritize, generate the "suggestedPlan" array c
         model: "gemini-2.5-flash",
         systemInstruction: systemInstruction,
         generationConfig: {
+          temperature: 0.2, // Lower temperature to reduce hallucinations
           responseMimeType: "application/json",
           responseSchema: responseSchema as any,
         }

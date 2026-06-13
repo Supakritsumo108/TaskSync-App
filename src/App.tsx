@@ -26,7 +26,7 @@ const AppContent = () => {
   return (
     <div className={isAuthPage ? "min-h-screen bg-slate-50 text-slate-800 flex items-center justify-center" : "flex min-h-screen bg-slate-50 text-slate-800"}>
       {!isAuthPage && <Sidebar />}
-      <main className={isAuthPage ? "w-full flex items-center justify-center" : "flex-1 ml-64 p-8 bg-slate-50 min-h-screen"}>
+      <main className={isAuthPage ? "w-full flex items-center justify-center" : "flex-1 ml-64 p-8 pb-28 bg-slate-50 min-h-screen"}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
