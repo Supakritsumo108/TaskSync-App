@@ -1,13 +1,12 @@
-
 import { useParams, useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
-import { ArrowLeft, Calendar, User as UserIcon, Tag, Edit, Trash2 } from 'lucide-react';
+import { ArrowLeft, Calendar, User as UserIcon, Tag, Trash2 } from 'lucide-react';
 import './TaskDetail.css';
 
 const TaskDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { tasks, projects, users, loading } = useData();
+  const { tasks, projects, users, loading, updateTask, deleteTask, toggleSubtask } = useData();
 
   if (loading) return <div className="glass-panel">Loading...</div>;
 
@@ -25,6 +24,17 @@ const TaskDetail = () => {
   const project = projects.find(p => p.project_id === task.project_id);
   const assignedUser = users.find(u => u.user_id === task.assigned_to);
 
+  const handleStatusChange = (newStatus: 'TODO' | 'DOING' | 'DONE' | 'BLOCKED') => {
+    updateTask(task.task_id, { status: newStatus });
+  };
+
+  const handleDelete = () => {
+    if (window.confirm('Are you sure you want to delete this task?')) {
+      deleteTask(task.task_id);
+      navigate('/tasks');
+    }
+  };
+
   return (
     <div className="task-detail-container">
       <button className="btn btn-outline back-btn" onClick={() => navigate(-1)}>
@@ -35,16 +45,24 @@ const TaskDetail = () => {
       <div className="glass-panel task-main-card">
         <div className="detail-header">
           <div className="header-badges">
-            <span className={`status-badge status-${task.status.toLowerCase()}`}>
-              {task.status}
-            </span>
+            <select
+              className="status-select"
+              value={task.status}
+              onChange={(e) => handleStatusChange(e.target.value as any)}
+            >
+              <option value="TODO">TODO</option>
+              <option value="DOING">DOING</option>
+              <option value="DONE">DONE</option>
+              <option value="BLOCKED">BLOCKED</option>
+            </select>
             <span className={`priority-badge priority-${task.priority.toLowerCase()}`}>
               {task.priority} Priority
             </span>
           </div>
           <div className="action-buttons">
-            <button className="btn btn-outline btn-icon" title="Edit"><Edit size={18} /></button>
-            <button className="btn btn-outline btn-icon text-danger" title="Delete"><Trash2 size={18} /></button>
+            <button className="btn btn-outline btn-icon text-danger" title="Delete" onClick={handleDelete}>
+              <Trash2 size={18} />
+            </button>
           </div>
         </div>
 
@@ -76,6 +94,25 @@ const TaskDetail = () => {
             </div>
           </div>
         </div>
+
+        {/* Subtasks Checklist */}
+        {task.subtasks && task.subtasks.length > 0 && (
+          <div className="task-subtasks">
+            <h3>📋 Subtasks Checklist</h3>
+            <div className="subtasks-list">
+              {task.subtasks.map((sub, idx) => (
+                <label key={idx} className="subtask-item">
+                  <input
+                    type="checkbox"
+                    checked={sub.completed}
+                    onChange={() => toggleSubtask(task.task_id, idx)}
+                  />
+                  <span className={sub.completed ? 'completed' : ''}>{sub.title}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="task-description">
           <h3>Description</h3>

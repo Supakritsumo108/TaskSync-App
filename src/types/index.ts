@@ -11,6 +11,7 @@ export interface Task {
   title: string;
   status: 'TODO' | 'DOING' | 'DONE' | 'BLOCKED';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  subtasks?: { title: string; completed: boolean }[];
 }
 
 export interface User {

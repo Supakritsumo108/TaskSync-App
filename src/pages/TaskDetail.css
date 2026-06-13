@@ -170,3 +170,77 @@
   text-align: center;
   padding: 60px;
 }
+
+/* Subtasks Styles */
+.task-subtasks {
+  margin-bottom: 40px;
+  background: rgba(0, 0, 0, 0.1);
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--card-border);
+}
+
+.task-subtasks h3 {
+  font-size: 18px;
+  margin-bottom: 16px;
+  color: var(--text-primary);
+}
+
+.subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.subtask-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.subtask-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.subtask-item input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--accent-color);
+  cursor: pointer;
+}
+
+.subtask-item span {
+  font-size: 15px;
+  color: var(--text-primary);
+  transition: color 0.2s;
+}
+
+.subtask-item span.completed {
+  text-decoration: line-through;
+  color: var(--text-secondary);
+}
+
+/* Status Select Styles in Header */
+.status-select {
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid var(--card-border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.status-select:focus {
+  border-color: var(--accent-color);
+}
