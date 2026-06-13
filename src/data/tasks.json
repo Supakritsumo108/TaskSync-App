@@ -5,7 +5,12 @@
     "assigned_to": "u008",
     "title": "Write Documentation",
     "status": "BLOCKED",
-    "priority": "CRITICAL"
+    "priority": "CRITICAL",
+    "subtasks": [
+      { "title": "Review API endpoints", "completed": true },
+      { "title": "Draft introductory sections", "completed": false },
+      { "title": "Add code examples", "completed": false }
+    ]
   },
   {
     "task_id": "tk-002",

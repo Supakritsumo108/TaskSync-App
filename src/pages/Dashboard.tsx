@@ -1,130 +1,236 @@
-
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useData } from '../context/DataContext';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, Clock, AlertTriangle, ListTodo } from 'lucide-react';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Chart as ChartJS, ArcElement, Tooltip } from 'chart.js';
 import { Doughnut } from 'react-chartjs-2';
-import './Dashboard.css';
+import { Plus } from 'lucide-react';
+import TaskModal from '../components/TaskModal';
+import Swal from 'sweetalert2';
 
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+ChartJS.register(ArcElement, Tooltip);
 
 const Dashboard = () => {
-  const { tasks, projects, users, loading: dataLoading } = useData();
+  const { tasks, projects, users, loading: dataLoading, addTask } = useData();
   const { currentUser } = useAuth();
+  const navigate = useNavigate();
+  
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<any>(null);
+  
+  if (dataLoading) return <div className="text-slate-500 flex justify-center p-10">Loading dashboard...</div>;
 
-  if (dataLoading) return <div className="glass-panel">Loading dashboard...</div>;
-
-  const todoCount = tasks.filter(t => t.status === 'TODO').length;
-  const doingCount = tasks.filter(t => t.status === 'DOING').length;
   const doneCount = tasks.filter(t => t.status === 'DONE').length;
+  const doingCount = tasks.filter(t => t.status === 'DOING').length;
   const blockedCount = tasks.filter(t => t.status === 'BLOCKED').length;
+  const totalCount = tasks.length;
+
+  const criticalCount = tasks.filter(t => t.priority === 'CRITICAL').length;
+  const highCount = tasks.filter(t => t.priority === 'HIGH').length;
+  const mediumCount = tasks.filter(t => t.priority === 'MEDIUM').length;
+  const lowCount = tasks.filter(t => t.priority === 'LOW').length;
 
   const doughnutData = {
-    labels: ['TODO', 'DOING', 'DONE', 'BLOCKED'],
+    labels: ['เสร็จแล้ว', 'กำลังทำ', 'รอดำเนินการ (TODO)', 'ติดปัญหา'],
     datasets: [
       {
-        data: [todoCount, doingCount, doneCount, blockedCount],
-        backgroundColor: [
-          'rgba(245, 158, 11, 0.8)', // Warning (TODO)
-          'rgba(99, 102, 241, 0.8)', // Primary (DOING)
-          'rgba(16, 185, 129, 0.8)', // Success (DONE)
-          'rgba(239, 68, 68, 0.8)'   // Danger (BLOCKED)
+        data: [
+          doneCount, 
+          doingCount, 
+          tasks.filter(t => t.status === 'TODO').length,
+          blockedCount
         ],
-        borderColor: [
-          'rgba(245, 158, 11, 1)',
-          'rgba(99, 102, 241, 1)',
-          'rgba(16, 185, 129, 1)',
-          'rgba(239, 68, 68, 1)'
-        ],
-        borderWidth: 1,
+        backgroundColor: ['#10B981', '#F59E0B', '#E2E8F0', '#EF4444'], // Emerald, Amber, Slate, Red
+        borderWidth: 0,
+        hoverOffset: 4
       },
     ],
   };
 
-  const criticalTasks = tasks.filter(t => t.priority === 'CRITICAL').length;
-  const highTasks = tasks.filter(t => t.priority === 'HIGH').length;
+  // Urgent tasks: Sort by priority (CRITICAL > HIGH > MEDIUM > LOW), exclude DONE
+  const priorityWeight: Record<string, number> = { CRITICAL: 4, HIGH: 3, MEDIUM: 2, LOW: 1 };
+  const urgentTasks = tasks
+    .filter(t => t.status !== 'DONE')
+    .sort((a, b) => priorityWeight[b.priority] - priorityWeight[a.priority])
+    .slice(0, 5);
 
-  // Get user initial from display name or email
-  const userInitial = currentUser?.displayName 
-    ? currentUser.displayName.charAt(0).toUpperCase() 
-    : (currentUser?.email ? currentUser.email.charAt(0).toUpperCase() : 'U');
+  const getStatusDisplay = (status: string) => {
+    switch(status) {
+      case 'DONE': return <span className="bg-emerald-100 text-emerald-600 px-3 py-1 rounded-full text-xs font-semibold">Completed</span>;
+      case 'DOING': return <span className="bg-amber-100 text-amber-600 px-3 py-1 rounded-full text-xs font-semibold">In Progress</span>;
+      case 'TODO': return <span className="bg-slate-100 text-slate-600 px-3 py-1 rounded-full text-xs font-semibold">To-Do</span>;
+      case 'BLOCKED': return <span className="bg-red-100 text-red-600 px-3 py-1 rounded-full text-xs font-semibold">Blocked</span>;
+      default: return null;
+    }
+  };
+
+  const handleCreateTask = (taskData: any) => {
+    addTask(taskData as any);
+    setIsModalOpen(false);
+    Swal.fire({
+      toast: true,
+      position: 'top-end',
+      icon: 'success',
+      title: 'Task created successfully',
+      showConfirmButton: false,
+      timer: 3000
+    });
+  };
 
   return (
-    <div className="dashboard-container">
-      <header className="dashboard-header">
+    <div className="flex flex-col gap-6 animate-in fade-in duration-300 max-w-6xl mx-auto w-full pb-10 pt-6">
+      
+      {/* Header Section */}
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="page-title">Overview</h1>
-          <p className="page-subtitle">Welcome back! Here's what's happening with your projects.</p>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard Overview</h1>
+          <p className="text-slate-500 text-sm mt-1">
+            Welcome back, {currentUser?.email || 'User'}
+          </p>
         </div>
-        <div className="user-profile-mock">
-          <div className="avatar text-avatar">
-            {userInitial}
-          </div>
-        </div>
+        <button 
+          className="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg font-medium text-sm transition-colors flex items-center gap-2 whitespace-nowrap cursor-pointer shadow-sm"
+          onClick={() => { setSelectedTask(null); setIsModalOpen(true); }}
+        >
+          <Plus size={18} />
+          New Task
+        </button>
       </header>
 
-      <div className="kpi-grid">
-        <div className="kpi-card glass-panel">
-          <div className="kpi-icon icon-primary"><ListTodo size={24} /></div>
-          <div className="kpi-content">
-            <h3>Total Tasks</h3>
-            <div className="kpi-value">{tasks.length}</div>
-          </div>
+      {/* Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="text-slate-500 text-sm font-medium mb-1">Total Tasks</div>
+          <div className="text-3xl font-bold text-slate-900">{totalCount}</div>
         </div>
-        <div className="kpi-card glass-panel">
-          <div className="kpi-icon icon-success"><CheckCircle size={24} /></div>
-          <div className="kpi-content">
-            <h3>Completed</h3>
-            <div className="kpi-value">{doneCount}</div>
-          </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="text-slate-500 text-sm font-medium mb-1">Completed</div>
+          <div className="text-3xl font-bold text-emerald-600">{doneCount}</div>
         </div>
-        <div className="kpi-card glass-panel">
-          <div className="kpi-icon icon-warning"><Clock size={24} /></div>
-          <div className="kpi-content">
-            <h3>In Progress</h3>
-            <div className="kpi-value">{doingCount}</div>
-          </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="text-slate-500 text-sm font-medium mb-1">In Progress</div>
+          <div className="text-3xl font-bold text-amber-500">{doingCount}</div>
         </div>
-        <div className="kpi-card glass-panel">
-          <div className="kpi-icon icon-danger"><AlertTriangle size={24} /></div>
-          <div className="kpi-content">
-            <h3>Blocked</h3>
-            <div className="kpi-value">{blockedCount}</div>
-          </div>
+        <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+          <div className="text-slate-500 text-sm font-medium mb-1">Blocked</div>
+          <div className="text-3xl font-bold text-red-500">{blockedCount}</div>
         </div>
       </div>
 
-      <div className="charts-grid">
-        <div className="chart-card glass-panel">
-          <h3>Task Status Distribution</h3>
-          <div className="chart-container">
-            <Doughnut data={doughnutData} options={{ maintainAspectRatio: false, color: '#f8fafc' }} />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Chart Section */}
+        <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm lg:col-span-1 flex flex-col items-center justify-center">
+          <h2 className="text-base font-bold text-slate-800 mb-6 self-start">Status Overview</h2>
+          <div className="relative w-48 h-48 mb-8">
+            <Doughnut 
+              data={doughnutData} 
+              options={{ 
+                maintainAspectRatio: false, 
+                cutout: '75%', 
+                plugins: { legend: { display: false }, tooltip: { enabled: true } } 
+              }} 
+            />
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-4xl font-black text-slate-900 leading-none mb-1">{totalCount}</span>
+              <span className="text-xs text-slate-500 font-medium">ทั้งหมด</span>
+            </div>
+          </div>
+
+          <div className="w-full flex flex-col gap-2 text-sm font-medium text-slate-600">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-emerald-500"></div><span>เสร็จแล้ว</span></div>
+              <span className="font-bold text-slate-900">{doneCount}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-amber-500"></div><span>กำลังทำ</span></div>
+              <span className="font-bold text-slate-900">{doingCount}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-slate-200"></div><span>รอดำเนินการ</span></div>
+              <span className="font-bold text-slate-900">{tasks.filter(t => t.status === 'TODO').length}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full bg-red-500"></div><span>ติดปัญหา</span></div>
+              <span className="font-bold text-slate-900">{blockedCount}</span>
+            </div>
           </div>
         </div>
-        
-        <div className="glass-panel summary-panel">
-          <h3>Project Summary</h3>
-          <div className="summary-stats">
-            <div className="stat-row">
-              <span>Active Projects:</span>
-              <strong>{projects.length}</strong>
-            </div>
-            <div className="stat-row">
-              <span>Critical Priority Tasks:</span>
-              <strong className="priority-critical">{criticalTasks}</strong>
-            </div>
-            <div className="stat-row">
-              <span>High Priority Tasks:</span>
-              <strong className="priority-high">{highTasks}</strong>
-            </div>
-            <div className="stat-row">
-              <span>Total Team Members:</span>
-              <strong>{users.length}</strong>
+
+        {/* Priority Breakdown & Urgent Tasks */}
+        <div className="lg:col-span-2 flex flex-col gap-6">
+          
+          {/* Priority Breakdown */}
+          <div className="bg-white border border-slate-200 rounded-xl p-6 shadow-sm flex flex-col gap-4">
+            <h2 className="text-base font-bold text-slate-800">Priority Breakdown</h2>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="flex flex-col gap-1 p-3 rounded-lg border border-red-100 bg-red-50">
+                <span className="text-xs font-semibold text-red-600 uppercase tracking-wider">Critical</span>
+                <span className="text-2xl font-bold text-red-700">{criticalCount}</span>
+              </div>
+              <div className="flex flex-col gap-1 p-3 rounded-lg border border-orange-100 bg-orange-50">
+                <span className="text-xs font-semibold text-orange-600 uppercase tracking-wider">High</span>
+                <span className="text-2xl font-bold text-orange-700">{highCount}</span>
+              </div>
+              <div className="flex flex-col gap-1 p-3 rounded-lg border border-amber-100 bg-amber-50">
+                <span className="text-xs font-semibold text-amber-600 uppercase tracking-wider">Medium</span>
+                <span className="text-2xl font-bold text-amber-700">{mediumCount}</span>
+              </div>
+              <div className="flex flex-col gap-1 p-3 rounded-lg border border-slate-100 bg-slate-50">
+                <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Low</span>
+                <span className="text-2xl font-bold text-slate-700">{lowCount}</span>
+              </div>
             </div>
           </div>
-          <button className="btn w-full mt-4">View All Projects</button>
+
+          {/* Urgent Tasks */}
+          <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden flex flex-col flex-1">
+            <div className="p-5 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
+              <h2 className="text-base font-bold text-slate-900">Urgent Tasks</h2>
+              <button 
+                className="text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors cursor-pointer"
+                onClick={() => navigate('/tasks')}
+              >
+                View all tasks
+              </button>
+            </div>
+            
+            <div className="flex flex-col">
+              {urgentTasks.length > 0 ? (
+                urgentTasks.map((task, idx) => {
+                  const assignedUser = users.find(u => u.user_id === task.assigned_to);
+                  return (
+                    <div 
+                      key={task.task_id} 
+                      className={`p-4 flex items-center justify-between hover:bg-slate-50 transition-colors cursor-pointer ${idx !== urgentTasks.length - 1 ? 'border-b border-slate-100' : ''}`}
+                      onClick={() => navigate(`/tasks/${task.task_id}`)}
+                    >
+                      <div className="flex flex-col gap-1">
+                        <span className="font-medium text-slate-900">{task.title}</span>
+                        <span className="text-xs text-slate-500">
+                          {assignedUser ? assignedUser.name : 'Unassigned'} • {task.priority.charAt(0) + task.priority.slice(1).toLowerCase()} Priority
+                        </span>
+                      </div>
+                      <div>{getStatusDisplay(task.status)}</div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="p-8 text-center text-slate-500 text-sm">No pending tasks found.</div>
+              )}
+            </div>
+          </div>
+
         </div>
       </div>
+
+      <TaskModal 
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSubmit={handleCreateTask}
+        initialData={selectedTask}
+        projects={projects}
+        users={users}
+      />
     </div>
   );
 };
