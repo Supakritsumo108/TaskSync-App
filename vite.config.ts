@@ -9,9 +9,6 @@ export default defineConfig({
     tailwindcss(),
   ],
   server: {
-    headers: {
-      'Cross-Origin-Opener-Policy': 'unsafe-none',
-      'Cross-Origin-Embedder-Policy': 'unsafe-none',
-    },
+    // Removed headers to prevent COOP blocking Firebase popup
   },
 })

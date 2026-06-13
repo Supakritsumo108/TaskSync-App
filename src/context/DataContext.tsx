@@ -17,6 +17,7 @@ interface DataContextType {
   deleteTask: (taskId: string) => void;
   toggleSubtask: (taskId: string, subtaskIndex: number) => void;
   addSubtasksToTask: (taskId: string, titles: string[]) => void;
+  addCommentToTask: (taskId: string, text: string, userId: string) => void;
 }
 
 const DataContext = createContext<DataContextType | undefined>(undefined);
@@ -116,6 +117,25 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       return updated;
     });
   };
+  const addCommentToTask = (taskId: string, text: string, userId: string) => {
+    setTasks(prev => {
+      const updated = prev.map(t => {
+        if (t.task_id === taskId) {
+          const newComment = {
+            id: `c-${Date.now()}`,
+            userId,
+            text,
+            createdAt: new Date().toISOString()
+          };
+          const currentComments = t.comments || [];
+          return { ...t, comments: [...currentComments, newComment] };
+        }
+        return t;
+      });
+      localStorage.setItem('tasksync_tasks', JSON.stringify(updated));
+      return updated;
+    });
+  };
 
   return (
     <DataContext.Provider value={{ 
@@ -127,7 +147,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
       updateTask,
       deleteTask,
       toggleSubtask,
-      addSubtasksToTask
+      addSubtasksToTask,
+      addCommentToTask
     }}>
       {children}
     </DataContext.Provider>

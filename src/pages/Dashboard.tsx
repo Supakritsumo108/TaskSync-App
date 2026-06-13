@@ -326,10 +326,10 @@ const Dashboard = () => {
                   ) : (
                     <tr>
                       <td colSpan={4} className="py-16 text-center">
-                        <div className="flex flex-col items-center justify-center text-slate-400">
-                          <Search size={40} className="mb-4 text-slate-300" strokeWidth={1} />
-                          <p className="font-medium">ไม่พบข้อมูลงานที่ค้นหา</p>
-                          <p className="text-sm mt-1">ลองเปลี่ยนคำค้นหา หรือตัวกรองสถานะ/ความสำคัญ</p>
+                        <div className="flex flex-col items-center justify-center text-slate-500">
+                          <img src="/illustrations/empty-tasks.png" alt="No tasks found" className="w-48 h-auto mb-6 opacity-90 drop-shadow-sm mix-blend-multiply" />
+                          <p className="font-bold text-lg text-slate-700">ไม่พบข้อมูลงานที่ค้นหา</p>
+                          <p className="text-sm mt-2">ลองเปลี่ยนคำค้นหา หรือตัวกรองสถานะ/ความสำคัญ</p>
                         </div>
                       </td>
                     </tr>

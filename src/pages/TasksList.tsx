@@ -228,8 +228,10 @@ const TasksList = () => {
 
       <div className="flex flex-col gap-8">
         {filteredTasks.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-12 text-center text-slate-500">
-            <p>No tasks found matching your criteria.</p>
+          <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-16 text-center flex flex-col items-center justify-center">
+            <img src="/illustrations/empty-tasks.png" alt="No tasks" className="w-56 h-auto mb-6 opacity-90 drop-shadow-sm mix-blend-multiply" />
+            <h3 className="font-bold text-xl text-slate-800">No tasks found</h3>
+            <p className="text-slate-500 mt-2">There are no tasks matching your current filters.</p>
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col">

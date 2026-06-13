@@ -1,6 +1,6 @@
 
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, LogOut } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, LogOut, Kanban } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
@@ -29,6 +29,10 @@ const Sidebar = () => {
         <NavLink to="/tasks" className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer ${isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
           <CheckSquare size={20} />
           <span>Tasks</span>
+        </NavLink>
+        <NavLink to="/board" className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-colors cursor-pointer ${isActive ? 'bg-indigo-50 text-indigo-600' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'}`}>
+          <Kanban size={20} />
+          <span>Board</span>
         </NavLink>
       </nav>
 

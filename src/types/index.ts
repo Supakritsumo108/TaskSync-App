@@ -12,6 +12,13 @@ export interface Task {
   status: 'TODO' | 'DOING' | 'DONE' | 'BLOCKED';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   subtasks?: { title: string; completed: boolean }[];
+  description?: string;
+  comments?: {
+    id: string;
+    userId: string;
+    text: string;
+    createdAt: string;
+  }[];
 }
 
 export interface User {
