@@ -223,7 +223,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         });
         return;
       } catch (error: any) {
-        console.error("Firebase Google Sign-In failed, falling back to mock login:", error);
+        console.error("Firebase Google Sign-In failed:", error);
+        if (error?.code === 'auth/unauthorized-domain') {
+          // Inform developer/user and do not silently fall back to mock login
+          // This usually means the current origin isn't added in Firebase Console
+          alert(
+            'Google Sign-In blocked: this domain is not authorized in Firebase.\nAdd your domain (e.g. localhost) under Firebase Console → Authentication → Authorized domains.'
+          );
+          return;
+        }
+        console.warn('Falling back to mock Google sign-in.');
       }
     }
 
