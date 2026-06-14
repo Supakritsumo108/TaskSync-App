@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (hasFirebase) {
       try {
         const { signInWithEmailAndPassword } = await import('firebase/auth');
-        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        await signInWithEmailAndPassword(auth, email, password);
         // Clean up any old local session
         localStorage.removeItem('tasksync_session');
         return;
@@ -145,7 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     if (hasFirebase) {
       try {
         const { createUserWithEmailAndPassword } = await import('firebase/auth');
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await createUserWithEmailAndPassword(auth, email, password);
         // Clean up any old local session
         localStorage.removeItem('tasksync_session');
         return;
