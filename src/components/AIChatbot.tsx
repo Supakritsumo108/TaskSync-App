@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { X, Send, Sparkles, User, Plus, RefreshCw, Trash2, Calendar, ClipboardList, BotMessageSquare } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 import { useData } from '../context/DataContext';
 
 interface ChatMessage {
@@ -18,6 +19,7 @@ interface ChatMessage {
 }
 
 const AIChatbot = () => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([
     { role: 'model', text: 'สวัสดีครับ! ผมคือผู้ช่วยส่วนตัว TaskSync AI ผมรู้สถานะของงานและโปรเจกต์ของคุณทั้งหมด ต้องการให้ผมช่วยจัดตารางเวลา ย่อยงาน สร้างการ์ดงานใหม่ หรืออัปเดตสถานะงานด้านไหน พิมพ์บอกได้เลยครับ!' }
@@ -332,7 +334,7 @@ If the user asks to schedule or prioritize, generate the "suggestedPlan" array c
             <textarea
               rows={1}
               className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-[13px] text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-shadow resize-none max-h-32 overflow-y-auto"
-              placeholder="Message AI Assistant..."
+              placeholder={t('ai.placeholder')}
               value={input}
               onChange={(e) => {
                 setInput(e.target.value);

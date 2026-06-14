@@ -1,7 +1,7 @@
 export interface Project {
   project_id: string;
   name: string;
-  deadline: string;
+  deadline?: string;
 }
 
 export interface Task {
@@ -11,6 +11,7 @@ export interface Task {
   title: string;
   status: 'TODO' | 'DOING' | 'DONE' | 'BLOCKED';
   priority: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
+  due_date?: string;
   subtasks?: { title: string; completed: boolean }[];
   description?: string;
   comments?: {
@@ -19,6 +20,8 @@ export interface Task {
     text: string;
     createdAt: string;
   }[];
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface User {
