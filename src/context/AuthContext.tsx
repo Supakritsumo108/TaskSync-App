@@ -203,8 +203,24 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       try {
         const { signInWithPopup } = await import('firebase/auth');
         const { googleProvider } = await import('../lib/firebase');
-        await signInWithPopup(auth, googleProvider);
-        localStorage.removeItem('tasksync_session');
+        const result = await signInWithPopup(auth, googleProvider);
+        const user = result.user;
+
+        const sessionUser = {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL || null
+        };
+
+        localStorage.setItem('tasksync_session', JSON.stringify(sessionUser));
+        setCurrentUser(sessionUser);
+        setUserProfile({
+          displayName: user.displayName || user.email?.split('@')[0] || 'User',
+          email: user.email,
+          photoURL: user.photoURL || null,
+          jobTitle: 'Developer'
+        });
         return;
       } catch (error: any) {
         console.error("Firebase Google Sign-In failed, falling back to mock login:", error);
